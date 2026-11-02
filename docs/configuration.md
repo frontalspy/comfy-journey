@@ -18,7 +18,7 @@ variables win over the file.
 ## Media storage
 
 By default images, videos and thumbnails live under `DATA_DIR`. Set `MEDIA_STORE=s3` to keep them
-in an S3-compatible bucket instead (AWS S3, Cloudflare R2, MinIO, Backblaze B2). The database always
+in an S3-compatible bucket instead (AWS S3, R2, MinIO, Backblaze B2). The database always
 stays local.
 
 | Variable                                   | Default     | Meaning                                                |

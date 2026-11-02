@@ -1,13 +1,17 @@
 // Fails when a tracked file mentions something that belongs to a private deployment.
 // Run in CI so the public repository stays generic: `node scripts/scrub.mjs`.
+//
+// Two kinds of rule:
+//   - Generic ones, built in: private network addresses and email addresses.
+//   - Private terms (names of your own products, hosts, people). They are NOT listed here, because
+//     listing them in a public repository would reveal them. Put one case-insensitive regular
+//     expression per line in a git-ignored `.scrub-patterns` file, or in the SCRUB_PATTERNS
+//     environment variable (CI: a repository secret). Blank lines and lines starting with // are
+//     ignored. Without either, only the generic rules run.
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
-const FORBIDDEN = [
-  [/\bd&d\b|\bdnd\b|dungeons/i, "game-platform wording"],
-  [/codex|threadbound|reconeia|luminari/i, "private product names"],
-  [/cloudflare access|cloudflared|cf-access/i, "private deployment provider"],
-  [/autonomous illusions|image[- ]studio/i, "the original app's name"],
+const GENERIC = [
   [
     /\b(?:10|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}(?:\.\d{1,3})?\b/,
     "private network address",
@@ -15,6 +19,17 @@ const FORBIDDEN = [
   ],
   [/[\w.+-]+@(?!example\.)[\w-]+\.(?:com|net|org|io)\b/i, "email address"],
 ];
+
+function privatePatterns() {
+  const fromFile = existsSync(".scrub-patterns") ? readFileSync(".scrub-patterns", "utf8") : "";
+  return `${fromFile}\n${process.env.SCRUB_PATTERNS ?? ""}`
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("//"))
+    .map((source) => [new RegExp(source, "i"), "private term"]);
+}
+
+const FORBIDDEN = [...GENERIC, ...privatePatterns()];
 const SELF = "scripts/scrub.mjs";
 
 const files = execFileSync("git", ["ls-files", "-z"], { encoding: "utf8" })
@@ -46,4 +61,7 @@ if (failures) {
   console.error(`\n${failures} problem(s). Move private details out of the repository.`);
   process.exit(1);
 }
-console.log(`Scrub clean (${files.length} files).`);
+const extra = FORBIDDEN.length - GENERIC.length;
+console.log(
+  `Scrub clean (${files.length} files, ${extra} private term(s) checked${extra ? "" : "; none configured"}).`,
+);

@@ -14,7 +14,7 @@ All three must pass. `npm run format` fixes formatting. For the UI run `npm run 
   is organised by area (`routes`, `jobs`, `images`, `workflows`, ...).
 - Add or update tests with the change. Server tests use a fake ComfyUI; no GPU is needed.
 - Keep private details (addresses, names of your own deployment, personal prompts or models) out of
-  the repository. `node scripts/scrub.mjs` checks this and runs in CI.
+  the repository. `node scripts/scrub.mjs` checks this and runs in CI; private terms go in a git-ignored `.scrub-patterns` file (see the script).
 - Never let a browser submit a ComfyUI graph or a node id; users send `{ workflowId, values }` only.
 
 ## Sign-off
