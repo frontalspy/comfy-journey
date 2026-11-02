@@ -6,8 +6,11 @@ Requires **Node 22 or newer**. `.nvmrc` pins it (`nvm use`). On an older Node th
 start with a message saying so.
 
 Under systemd, `ExecStart` must name that Node explicitly. A service does not read `.nvmrc`, and
-`/usr/bin/node` is often an older system Node. With nvm, use its full path, for example
-`~/.nvm/versions/node/v22.x.x/bin/node`. Run `npm ci` and `npm run build` with the same Node the
+`/usr/bin/node` is often an older system Node. A Node installed with nvm lives in a home
+directory, which the unit's `ProtectHome` hides and the service user cannot read, so the service
+fails with "No such file or directory". Copy it somewhere shared instead, for example
+`cp -r ~/.nvm/versions/node/v22.x.x /opt/node22 && chmod -R a+rX /opt/node22`, and use
+`/opt/node22/bin/node`. Run `npm ci` and `npm run build` with the same Node the
 service will use.
 
 ```
