@@ -22,7 +22,9 @@ interface Stream {
 }
 
 async function openStream(baseUrl: string, jobId: string, user: string): Promise<Stream> {
-  const response = await fetch(`${baseUrl}/api/jobs/${jobId}/events`, {
+  // A job id, or a full path such as "/api/events".
+  const path = jobId.startsWith("/") ? jobId : `/api/jobs/${jobId}/events`;
+  const response = await fetch(`${baseUrl}${path}`, {
     headers: { [USER_HEADER]: user },
   });
   let buffer = "";
@@ -31,7 +33,8 @@ async function openStream(baseUrl: string, jobId: string, user: string): Promise
   const decoder = new TextDecoder();
   const ended = (async () => {
     while (reader) {
-      const { done, value } = await reader.read();
+      // The server closing a stream it never ends itself (GET /api/events) is not a failure.
+      const { done, value } = await reader.read().catch(() => ({ done: true, value: undefined }));
       if (done) return;
       buffer += decoder.decode(value, { stream: true });
       for (const waiter of [...waiters]) {
@@ -69,6 +72,22 @@ async function start(options: Parameters<typeof createHarness>[0] = {}): Promise
   closeServer = server.close;
   return { h, baseUrl: server.baseUrl };
 }
+
+describe("GET /api/events", () => {
+  it("streams only the caller's own jobs", async () => {
+    const { h, baseUrl } = await start();
+    const aliceStream = await openStream(baseUrl, "/api/events", ALICE);
+    const bobStream = await openStream(baseUrl, "/api/events", BOB);
+    expect(aliceStream.response.headers.get("content-type")).toContain("text/event-stream");
+
+    const { id } = await runToDone(asUser(h, ALICE));
+    const seen = await aliceStream.until((text) => text.includes('"type":"done"'));
+    const events = dataEvents(seen);
+    expect(events.every((event) => event.jobId === id)).toBe(true);
+    expect(events.at(-1)?.type).toBe("done");
+    expect(bobStream.text()).not.toContain(id);
+  });
+});
 
 describe("GET /api/jobs/:id/events", () => {
   it("sends the current state first, then live events, and closes when the job is done", async () => {

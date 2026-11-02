@@ -75,5 +75,49 @@ export function jobEventRoutes(services: AppServices): Router {
     if (!row) return close();
     for (const event of await currentEvents(services, row)) send(event);
   });
+  // One stream for all of the caller's jobs, so the browser holds a single connection.
+  router.get("/events", (req, res) => {
+    const ownerId = ownerOf(req);
+    res.status(200).set({
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-store, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+      "X-Content-Type-Options": "nosniff",
+    });
+    res.flushHeaders();
+
+    let closed = false;
+    // Ownership is looked up once per job id; a foreign or unknown job is never forwarded.
+    const owned = new Map<string, Promise<boolean>>();
+    const isMine = (jobId: string): Promise<boolean> => {
+      let known = owned.get(jobId);
+      if (!known) {
+        known = getOwnedJob(services.db, ownerId, jobId).then(
+          (row) => Boolean(row),
+          () => false,
+        );
+        owned.set(jobId, known);
+      }
+      return known;
+    };
+    // Each event waits for the previous lookup, so one job's events stay in order.
+    let chain: Promise<void> = Promise.resolve();
+    const unsubscribe = services.ctx.bus.subscribeAll((event) => {
+      chain = chain.then(async () => {
+        if (closed || !(await isMine(event.jobId))) return;
+        res.write(`data: ${JSON.stringify(event)}\n\n`);
+      });
+    });
+    const heartbeat = setInterval(() => {
+      if (!closed) res.write(": heartbeat\n\n");
+    }, services.heartbeatMs);
+    req.on("close", () => {
+      closed = true;
+      clearInterval(heartbeat);
+      unsubscribe();
+      res.end();
+    });
+  });
   return router;
 }
