@@ -1,4 +1,4 @@
-import type { AppImage, PublicWorkflow } from "@comfy/shared";
+import type { AppImage, PublicParam, PublicWorkflow } from "@comfy/shared";
 
 export interface Fact {
   label: string;
@@ -23,9 +23,30 @@ export function describeSettings(image: AppImage, workflow: PublicWorkflow | und
   for (const param of workflow?.params ?? []) {
     if (skip.has(param.id)) continue;
     const value = image.params[param.id];
+    if (param.type === "modifiers") {
+      const used = describeModifiers(param, value);
+      facts.push({ label: param.label, value: used || "None" });
+      continue;
+    }
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
       facts.push({ label: param.label, value: String(value) });
     }
   }
   return facts;
+}
+
+/** "Cinematic Shot 1, Fantasy Wizards & Witches 0.5" for the add-ons a result was made with. */
+export function describeModifiers(
+  param: Extract<PublicParam, { type: "modifiers" }>,
+  value: unknown,
+): string {
+  if (!Array.isArray(value)) return "";
+  return value
+    .flatMap((entry) => {
+      if (typeof entry !== "object" || entry === null) return [];
+      const { id, strength } = entry as { id?: unknown; strength?: unknown };
+      const label = param.choices.find((choice) => choice.value === id)?.label;
+      return label && typeof strength === "number" ? [`${label} ${strength}`] : [];
+    })
+    .join(", ");
 }

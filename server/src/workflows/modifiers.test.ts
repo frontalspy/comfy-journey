@@ -83,6 +83,18 @@ describe("modifiers", () => {
     expect(isAcyclic(workflow)).toBe(true);
   });
 
+  it("applyToClip: false sets the text-encoder strength to zero", async () => {
+    const { manifest, template } = await fixture();
+    const modelOnly = patchParam(manifest, "modifiers", (param) => ({
+      ...param,
+      applyToClip: false,
+    }));
+    const { workflow } = applyParams(template, modelOnly, {
+      modifiers: [{ id: "beta", strength: 0.7 }],
+    });
+    expect(workflow.mod_1?.inputs).toMatchObject({ strength_model: 0.7, strength_clip: 0 });
+  });
+
   it("three modifiers chain in the order chosen", async () => {
     const { manifest, template } = await fixture();
     const { workflow } = applyParams(template, manifest, {

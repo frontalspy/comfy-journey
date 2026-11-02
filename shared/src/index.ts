@@ -144,6 +144,11 @@ export const manifestParamSchema = z.discriminatedUnion("type", [
     ...modifiersShape,
     choices: z.array(z.object({ ...modifierChoiceShape, file: z.string().min(1).max(200) })).min(1),
     /**
+     * False applies each LoRA to the model only (text-encoder strength 0), for LoRAs trained that
+     * way. Server-side only.
+     */
+    applyToClip: z.boolean().default(true),
+    /**
      * Where the chain goes. The graph is stored WITHOUT any LoRA loader: `from` is the output the
      * chain starts at ([nodeId, outputSlot] of the model / clip source) and `consumers` are the
      * inputs that read the end of the chain. The server inserts one LoraLoader per chosen modifier,

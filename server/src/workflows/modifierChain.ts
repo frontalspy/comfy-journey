@@ -30,7 +30,7 @@ export function insertModifierChain(
       inputs: {
         lora_name: choice.file,
         strength_model: modifier.strength,
-        strength_clip: modifier.strength,
+        strength_clip: param.applyToClip ? modifier.strength : 0,
         model,
         clip,
       },

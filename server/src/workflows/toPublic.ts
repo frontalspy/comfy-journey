@@ -4,7 +4,7 @@ import type { PublicParam, PublicWorkflow, WorkflowManifest } from "@comfy/share
 function toPublicParam(param: WorkflowManifest["params"][number]): PublicParam {
   switch (param.type) {
     case "modifiers": {
-      const { chain: _chain, choices, ...rest } = param;
+      const { chain: _chain, applyToClip: _clip, choices, ...rest } = param;
       return { ...rest, choices: choices.map(({ file: _file, ...choice }) => choice) };
     }
     case "images": {
