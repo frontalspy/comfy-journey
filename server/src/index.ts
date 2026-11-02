@@ -6,6 +6,15 @@ import { env } from "./env.js";
 import { loadGpuGate } from "./jobs/loadGpuGate.js";
 import { createAppServices } from "./services.js";
 
+// Following a job needs the built-in WebSocket (Node 22 or newer). Fail now, with the fix, rather
+// than failing every job later.
+if (typeof (globalThis as { WebSocket?: unknown }).WebSocket !== "function") {
+  console.error(
+    `Comfy needs Node 22 or newer (built-in WebSocket); this is Node ${process.versions.node}. Install Node 22 and point the service at it.`,
+  );
+  process.exit(1);
+}
+
 const config = configFromEnv(env);
 const provider = await createAuthProvider({
   mode: env.AUTH_MODE,
