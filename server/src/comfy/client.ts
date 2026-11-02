@@ -105,6 +105,8 @@ export function createComfyClient(options: ComfyClientOptions): ComfyClient {
   const createWebSocket = options.createWebSocket ?? defaultCreateWebSocket;
   const clientId = options.clientId ?? randomUUID();
   const requestTimeoutMs = options.requestTimeoutMs ?? 30_000;
+  // A health probe must answer quickly even when a firewall silently drops packets to ComfyUI.
+  const probeTimeoutMs = Math.min(requestTimeoutMs, 5_000);
   const idleTimeoutMs = options.idleTimeoutMs ?? 5 * 60_000;
   const cleanupToken = options.cleanupToken || undefined;
   const cleanupTimeoutMs = options.cleanupTimeoutMs ?? 5_000;
@@ -139,8 +141,8 @@ export function createComfyClient(options: ComfyClientOptions): ComfyClient {
     return res;
   }
 
-  async function json(path: string, init?: RequestInit): Promise<unknown> {
-    const res = await request(path, init);
+  async function json(path: string, init?: RequestInit, timeoutMs?: number): Promise<unknown> {
+    const res = await request(path, init, timeoutMs);
     try {
       return await res.json();
     } catch (err) {
@@ -261,7 +263,7 @@ export function createComfyClient(options: ComfyClientOptions): ComfyClient {
     },
 
     async systemStats() {
-      const body = await json("/system_stats");
+      const body = await json("/system_stats", undefined, probeTimeoutMs);
       if (!isRecord(body)) throw new ComfyError("http", "ComfyUI sent invalid /system_stats");
       return {
         system: isRecord(body.system) ? body.system : {},
