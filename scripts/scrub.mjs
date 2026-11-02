@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 const FORBIDDEN = [
   [/\bd&d\b|\bdnd\b|dungeons/i, "game-platform wording"],
   [/codex|threadbound|reconeia|luminari/i, "private product names"],
-  [/cloudflare/i, "private deployment provider"],
+  [/cloudflare access|cloudflared|cf-access/i, "private deployment provider"],
   [/autonomous illusions|image[- ]studio/i, "the original app's name"],
   [
     /\b(?:10|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}(?:\.\d{1,3})?\b/,

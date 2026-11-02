@@ -15,6 +15,26 @@ variables win over the file.
 | `COMFYUI_CLEANUP_TOKEN` | unset                   | Enables deleting finished jobs' files from ComfyUI; needs the `job_cleanup` extension from `comfyui-extension/`. |
 | `GPU_GATE_MODULE`       | unset                   | A file exporting a GPU gate factory, to share one GPU with other software. Default is an in-process gate.        |
 
+## Media storage
+
+By default images, videos and thumbnails live under `DATA_DIR`. Set `MEDIA_STORE=s3` to keep them
+in an S3-compatible bucket instead (AWS S3, Cloudflare R2, MinIO, Backblaze B2). The database always
+stays local.
+
+| Variable                                   | Default     | Meaning                                                |
+| ------------------------------------------ | ----------- | ------------------------------------------------------ |
+| `S3_BUCKET`                                | —           | Required.                                              |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | —           | Required. Needs read, write and delete on the bucket.  |
+| `S3_REGION`                                | `us-east-1` | Use `auto` for R2.                                     |
+| `S3_ENDPOINT`                              | unset (AWS) | Set for any non-AWS service; addressing is path-style. |
+| `S3_PREFIX`                                | `comfy`     | Folder inside the bucket.                              |
+
+The bucket does not need to be public. The app checks who owns a file, then redirects the browser to
+a signed link that works for two hours. Object names are the same on disk and in a bucket, so you can
+move existing media with any sync tool, e.g. `aws s3 sync data/media s3://BUCKET/comfy/media` and the
+same for `data/thumbs`. The daily sweep of orphaned files only looks at local disk; with a bucket,
+files left behind by a crash stay until removed by hand.
+
 ## Authentication
 
 Choose one with `AUTH_MODE`. Every mode fails closed: a request with no identity gets `401`.

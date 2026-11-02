@@ -6,6 +6,7 @@ import { removeQuietly } from "../test/testApp.js";
 import { DiskMediaBackend } from "./diskMediaBackend.js";
 import type { MediaBackend } from "./mediaBackend.js";
 import { MediaStore } from "./mediaStore.js";
+import { S3MediaBackend } from "./s3MediaBackend.js";
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -15,7 +16,54 @@ afterEach(() => {
 const KEY = "0123456789abcdef01234567/11111111-2222-3333-4444-555555555555.png";
 const BYTES = Buffer.from("png-bytes");
 
+/** An in-memory S3: path-style, rejects any request that is not SigV4-signed with the test key. */
+function fakeS3Fetch(): typeof fetch {
+  const objects = new Map<string, Uint8Array>();
+  return (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(String(input));
+    const headers = new Headers(init?.headers);
+    if (!(headers.get("authorization") ?? "").startsWith("AWS4-HMAC-SHA256 Credential=TESTKEY/")) {
+      return new Response("denied", { status: 403 });
+    }
+    const key = decodeURIComponent(url.pathname);
+    switch (init?.method) {
+      case "PUT":
+        objects.set(key, new Uint8Array(init.body as Uint8Array));
+        return new Response(null, { status: 200 });
+      case "DELETE":
+        objects.delete(key);
+        return new Response(null, { status: 204 });
+      case "HEAD":
+      case "GET": {
+        const body = objects.get(key);
+        if (!body) return new Response("missing", { status: 404 });
+        const length = { "content-length": String(body.length) };
+        return init.method === "HEAD"
+          ? new Response(null, { status: 200, headers: length })
+          : new Response(body, { status: 200, headers: length });
+      }
+      default:
+        return new Response("bad method", { status: 405 });
+    }
+  }) as typeof fetch;
+}
+
 const backends: [string, () => MediaBackend][] = [
+  [
+    "s3",
+    () =>
+      new S3MediaBackend(
+        {
+          bucket: "media",
+          region: "auto",
+          endpoint: "https://s3.example.test",
+          prefix: "comfy",
+          accessKeyId: "TESTKEY",
+          secretAccessKey: "secret",
+        },
+        { fetch: fakeS3Fetch() },
+      ),
+  ],
   [
     "disk",
     () => {
@@ -87,5 +135,36 @@ describe.each(backends)("MediaStore over %s", (_name, make) => {
     const store = new MediaStore(backend, { warn: (line: string) => void warnings.push(line) });
     await expect(store.remove("media", KEY)).resolves.toBeUndefined();
     expect(warnings).toHaveLength(1);
+  });
+});
+
+describe("S3MediaBackend addressing", () => {
+  const base = {
+    bucket: "media",
+    region: "eu-west-1",
+    prefix: "comfy/",
+    accessKeyId: "K",
+    secretAccessKey: "S",
+  };
+
+  it("signs links for the bucket host on AWS, under the prefix, without a bucket path", () => {
+    const url = new URL(new S3MediaBackend(base).publicUrl("media", KEY));
+    expect(url.host).toBe("media.s3.eu-west-1.amazonaws.com");
+    expect(url.pathname).toBe(`/comfy/media/${KEY}`);
+    expect(url.searchParams.get("X-Amz-Signature")).toMatch(/^[0-9a-f]{64}$/);
+    expect(url.searchParams.get("X-Amz-Expires")).toBe("7200");
+  });
+
+  it("uses path-style addressing for a custom endpoint", () => {
+    const url = new URL(
+      new S3MediaBackend({ ...base, endpoint: "http://127.0.0.1:9000" }).publicUrl("thumbs", KEY),
+    );
+    expect(url.origin).toBe("http://127.0.0.1:9000");
+    expect(url.pathname).toBe(`/media/comfy/thumbs/${KEY}`);
+  });
+
+  it("refuses keys that are not exactly owner/name.ext", async () => {
+    const backend = new S3MediaBackend(base, { fetch: fakeS3Fetch() });
+    await expect(backend.read("media", "../x.png")).rejects.toThrow();
   });
 });

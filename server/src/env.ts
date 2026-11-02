@@ -57,8 +57,15 @@ const envSchema = baseEnvSchema.extend({
   AUTH_TOKENS: z.string().optional(),
   // module mode: a file whose default export builds an AuthProvider.
   AUTH_MODULE: z.string().optional(),
-  // Where media lives. Only "disk" exists for now; an S3-compatible backend is planned.
-  MEDIA_STORE: z.enum(["disk"]).default("disk"),
+  // Where media lives: local disk, or any S3-compatible bucket (AWS S3, R2, MinIO, B2, ...).
+  MEDIA_STORE: z.enum(["disk", "s3"]).default("disk"),
+  S3_BUCKET: z.string().min(1).optional(),
+  S3_REGION: z.string().min(1).default("us-east-1"),
+  // Set for a non-AWS service (path-style addressing is used); leave unset for AWS S3.
+  S3_ENDPOINT: z.string().url().optional(),
+  S3_ACCESS_KEY_ID: z.string().min(1).optional(),
+  S3_SECRET_ACCESS_KEY: z.string().min(1).optional(),
+  S3_PREFIX: z.string().default("comfy"),
   WEB_DIST_PATH: z.string().optional(),
 });
 
@@ -67,6 +74,12 @@ export type AppEnv = z.infer<typeof envSchema>;
 /** Parses and validates; throws a ZodError naming every bad variable. Exported for tests. */
 export function parseEnv(source: NodeJS.ProcessEnv): AppEnv {
   const parsed = envSchema.parse(source);
+  if (parsed.MEDIA_STORE === "s3") {
+    const missing = ["S3_BUCKET", "S3_ACCESS_KEY_ID", "S3_SECRET_ACCESS_KEY"].filter(
+      (name) => !parsed[name as "S3_BUCKET"],
+    );
+    if (missing.length) throw new Error(`MEDIA_STORE=s3 needs ${missing.join(", ")}`);
+  }
   // A test run must never touch a real data directory (see isolateTestEnvironment).
   assertNotRealDataInTests("DATA_DIR", parsed.DATA_DIR);
   return parsed;
