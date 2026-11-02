@@ -1,6 +1,6 @@
 import type { AppImage } from "@comfy/shared";
 import { useQueryClient } from "@tanstack/react-query";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { comfyApi } from "../../../api/comfyApi";
 import { useToast } from "../../../components/Toasts";
 import { editCachedImage } from "../imageCache";
@@ -44,5 +44,5 @@ export function useImageMutations(): ImageMutations {
     [queryClient, notify],
   );
 
-  return { setFavourite, remove };
+  return useMemo(() => ({ setFavourite, remove }), [setFavourite, remove]);
 }
