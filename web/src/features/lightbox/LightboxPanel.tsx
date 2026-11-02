@@ -74,6 +74,11 @@ export function LightboxPanel({ image, position, actions }: LightboxPanelProps) 
           <Icon name="heart" size={16} filled={image.favourite} />{" "}
           {image.favourite ? "Favourited" : "Favourite"}
         </button>
+        {actions.canUpscale && image.kind === "image" ? (
+          <button type="button" className="btn btn-small" onClick={() => actions.upscale(image)}>
+            <Icon name="upscale" size={16} /> Upscale
+          </button>
+        ) : null}
         <a className="btn btn-small" href={comfyApi.downloadUrl(image.id)} download>
           <Icon name="download" size={16} /> Download
         </a>

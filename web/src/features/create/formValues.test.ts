@@ -122,3 +122,27 @@ describe("submission", () => {
     ).not.toHaveProperty("ref");
   });
 });
+
+describe("an image-only workflow", () => {
+  const upscaler = {
+    ...exampleWorkflow,
+    id: "upscale",
+    kind: "upscale" as const,
+    params: [
+      {
+        id: "image",
+        label: "Image",
+        type: "image" as const,
+        default: null,
+        required: true,
+        advanced: false,
+      },
+    ],
+  };
+
+  it("has no prompt, and needs its image before it can be submitted", () => {
+    expect(splitParams(upscaler).prompt).toBeUndefined();
+    expect(missingRequirement(upscaler, { image: null })).toMatch(/Add an image/);
+    expect(missingRequirement(upscaler, { image: "abc" })).toBeUndefined();
+  });
+});

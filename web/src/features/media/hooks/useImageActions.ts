@@ -16,6 +16,10 @@ export interface ImageActions {
   reuseSettings: (image: AppImage) => void;
   /** Same settings, new seed, started straight away. */
   variation: (image: AppImage) => void;
+  /** Whether an upscale workflow is installed and usable. */
+  canUpscale: boolean;
+  /** Enlarges the picture with the upscale workflow, started straight away. */
+  upscale: (image: AppImage) => void;
 }
 
 /** Everything a person can do with a result, shared by the feed, library and lightbox. */
@@ -89,14 +93,45 @@ export function useImageActions(): ImageActions {
     [workflows, createJob, navigate, notify],
   );
 
+  const upscaleWorkflow = useMemo(
+    () =>
+      workflows?.find(
+        (candidate) =>
+          candidate.kind === "upscale" && candidate.available && (nsfwVisible || !candidate.nsfw),
+      ),
+    [workflows, nsfwVisible],
+  );
+
+  const upscale = useCallback(
+    (image: AppImage) => {
+      const imageParam = upscaleWorkflow?.params.find((param) => param.type === "image");
+      if (!upscaleWorkflow || !imageParam) {
+        return notify("No upscale workflow is available.", "error");
+      }
+      const values = { ...mergeValues(upscaleWorkflow, {}), [imageParam.id]: image.id };
+      if ("seed" in values) values.seed = -1;
+      createJob.mutate({
+        request: {
+          workflowId: upscaleWorkflow.id,
+          values: valuesForSubmit(upscaleWorkflow, values),
+        },
+        prompt: "",
+      });
+      navigate("/");
+    },
+    [upscaleWorkflow, createJob, navigate, notify],
+  );
+
   return useMemo(
     () => ({
+      canUpscale: Boolean(upscaleWorkflow),
+      upscale,
       toggleFavourite: (image) => void mutations.setFavourite(image, !image.favourite),
       remove: (image) => void mutations.remove(image),
       reusePrompt,
       reuseSettings,
       variation,
     }),
-    [mutations, reusePrompt, reuseSettings, variation],
+    [mutations, reusePrompt, reuseSettings, variation, upscale, upscaleWorkflow],
   );
 }

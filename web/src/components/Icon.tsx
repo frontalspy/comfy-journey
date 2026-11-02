@@ -23,6 +23,7 @@ const PATHS = {
   upload: "M12 16V5M7 10l5-5 5 5M5 19h14",
   dice: "M5 5h14v14H5zM9 9h.01M15 9h.01M12 12h.01M9 15h.01M15 15h.01",
   stop: "M7 7h10v10H7z",
+  upscale: "M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7",
 } as const;
 
 export type IconName = keyof typeof PATHS;

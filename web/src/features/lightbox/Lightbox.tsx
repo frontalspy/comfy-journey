@@ -113,6 +113,7 @@ export default function Lightbox({ images, startIndex, onClose }: LightboxProps)
           reusePrompt: closeThen(actions.reusePrompt),
           reuseSettings: closeThen(actions.reuseSettings),
           variation: closeThen(actions.variation),
+          upscale: closeThen(actions.upscale),
           toggleFavourite: (image) => {
             actions.toggleFavourite(image);
             setItems((all) =>

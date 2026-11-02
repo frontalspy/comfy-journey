@@ -81,6 +81,16 @@ function MediaTileView({ image, actions, onOpen, selecting, selected, eager }: M
           >
             <Icon name="refresh" size={18} />
           </button>
+          {actions.canUpscale && image.kind === "image" ? (
+            <button
+              type="button"
+              className="icon-btn secondary"
+              aria-label="Upscale"
+              onClick={() => actions.upscale(image)}
+            >
+              <Icon name="upscale" size={18} />
+            </button>
+          ) : null}
           <a
             className="icon-btn secondary"
             aria-label="Download"

@@ -12,6 +12,8 @@ interface SettingsDialogProps {
   values: FormValues;
   onSelectWorkflow: (workflowId: string) => void;
   onChange: (paramId: string, value: unknown) => void;
+  /** A parameter the Create bar already handles, so it is not repeated here. */
+  hiddenParamId?: string;
 }
 
 /** Workflow, size, count and every other setting: a popover on desktop, a bottom sheet on a phone. */
@@ -23,14 +25,16 @@ export function SettingsDialog({
   values,
   onSelectWorkflow,
   onChange,
+  hiddenParamId,
 }: SettingsDialogProps) {
   const split = splitParams(workflow);
   const aspects = split.width && split.height ? aspectOptions(split.width, split.height) : [];
   const width = Number(values.width);
   const height = Number(values.height);
   const active = activeAspect(aspects, width, height);
-  const basic = split.rest.filter((param) => !param.advanced);
-  const advanced = split.rest.filter((param) => param.advanced);
+  const shown = split.rest.filter((param) => param.id !== hiddenParamId);
+  const basic = shown.filter((param) => !param.advanced);
+  const advanced = shown.filter((param) => param.advanced);
 
   return (
     <ModalDialog open={open} onClose={onClose} label="Settings" className="sheet">

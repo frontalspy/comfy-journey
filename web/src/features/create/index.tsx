@@ -3,6 +3,7 @@ import { EmptyState } from "../../components/EmptyState";
 import { QueryBoundary } from "../../components/QueryBoundary";
 import { useSystem } from "../activity/hooks/useSystem";
 import { Feed } from "./components/Feed";
+import { ImageInputBar } from "./components/ImageInputBar";
 import { PromptBar } from "./components/PromptBar";
 import { SettingsDialog } from "./components/SettingsDialog";
 import { splitParams } from "./formValues";
@@ -14,6 +15,11 @@ export function CreateScreen() {
   const system = useSystem();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { workflow } = form;
+  // A workflow with no prompt (an upscaler) starts from a picture instead.
+  const imageParam =
+    workflow && !splitParams(workflow).prompt
+      ? workflow.params.find((param) => param.type === "image")
+      : undefined;
 
   return (
     <QueryBoundary isPending={form.isPending} error={form.error}>
@@ -23,18 +29,35 @@ export function CreateScreen() {
         </EmptyState>
       ) : (
         <>
-          <PromptBar
-            prompt={String(form.values[splitParams(workflow).prompt?.id ?? ""] ?? "")}
-            placeholder={`Describe what you want to see…`}
-            onPromptChange={(text) =>
-              form.setValue(splitParams(workflow).prompt?.id ?? "prompt", text)
-            }
-            onSubmit={() => void form.submit()}
-            onOpenSettings={() => setSettingsOpen(true)}
-            blocker={form.blocker}
-            submitting={form.submitting}
-            summary={summaryLine(form.values, workflow.name)}
-          />
+          {imageParam ? (
+            <ImageInputBar
+              imageId={
+                typeof form.values[imageParam.id] === "string"
+                  ? String(form.values[imageParam.id])
+                  : null
+              }
+              onImageChange={(imageId) => form.setValue(imageParam.id, imageId)}
+              onSubmit={() => void form.submit()}
+              onOpenSettings={() => setSettingsOpen(true)}
+              blocker={form.blocker}
+              submitting={form.submitting}
+              submitLabel={workflow.kind === "upscale" ? "Upscale" : "Create"}
+              summary={summaryLine(form.values, workflow.name)}
+            />
+          ) : (
+            <PromptBar
+              prompt={String(form.values[splitParams(workflow).prompt?.id ?? ""] ?? "")}
+              placeholder={"Describe what you want to see…"}
+              onPromptChange={(text) =>
+                form.setValue(splitParams(workflow).prompt?.id ?? "prompt", text)
+              }
+              onSubmit={() => void form.submit()}
+              onOpenSettings={() => setSettingsOpen(true)}
+              blocker={form.blocker}
+              submitting={form.submitting}
+              summary={summaryLine(form.values, workflow.name)}
+            />
+          )}
           {system.data?.comfyui === "offline" ? (
             <p className="banner banner-bad" role="status">
               ComfyUI is not reachable right now. New creations will wait or fail until it is back.
@@ -48,6 +71,7 @@ export function CreateScreen() {
             values={form.values}
             onSelectWorkflow={form.selectWorkflow}
             onChange={form.setValue}
+            hiddenParamId={imageParam?.id}
           />
           <Feed />
         </>
@@ -57,9 +81,10 @@ export function CreateScreen() {
 }
 
 function summaryLine(values: Record<string, unknown>, workflowName: string): string {
-  const { width, height, batch } = values;
+  const { width, height, batch, megapixels } = values;
   const size =
     typeof width === "number" && typeof height === "number" ? ` · ${width} × ${height}` : "";
   const count = typeof batch === "number" && batch > 1 ? ` · ${batch} images` : "";
-  return `${workflowName}${size}${count}`;
+  const output = typeof megapixels === "number" ? ` · ${megapixels} megapixels` : "";
+  return `${workflowName}${size}${count}${output}`;
 }
