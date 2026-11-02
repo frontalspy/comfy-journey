@@ -113,7 +113,9 @@ async function runOnGpu(
 
 function classify(ctx: JobContext, jobId: string, err: unknown): JobOutcome {
   if (isTransient(err)) {
-    ctx.log.warn(`[worker] job ${jobId} hit a transient ComfyUI failure`);
+    ctx.log.warn(
+      `[worker] job ${jobId} hit a transient ComfyUI failure (${err instanceof Error ? err.message : "unknown"}); it will be retried`,
+    );
     return { type: "requeue", reason: "transient" };
   }
   ctx.log.error(
