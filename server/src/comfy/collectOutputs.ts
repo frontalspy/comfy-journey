@@ -16,9 +16,12 @@ function isSafePart(value: string): boolean {
  * from VHS_VideoCombine, `videos`, `audio`, ...). Each file's own `type` is kept because /view
  * must be asked for "temp" files (PreviewImage) as such. Non-media (audio, animated flags),
  * input-type refs and unsafe paths are dropped, duplicates collapse, and permanent "output" files
- * come ahead of "temp" previews. Capped at MAX_OUTPUTS_PER_JOB.
+ * come ahead of "temp" previews (or replace them, with `previews: false`). Capped at MAX_OUTPUTS_PER_JOB.
  */
-export function collectOutputFiles(entry: ComfyHistoryEntry): ComfyFileRef[] {
+export function collectOutputFiles(
+  entry: ComfyHistoryEntry,
+  options: { previews?: boolean } = {},
+): ComfyFileRef[] {
   const seen = new Set<string>();
   const refs: ComfyFileRef[] = [];
   for (const output of Object.values(entry.outputs)) {
@@ -40,5 +43,8 @@ export function collectOutputFiles(entry: ComfyHistoryEntry): ComfyFileRef[] {
   }
   const permanent = refs.filter((ref) => ref.type === "output");
   const previews = refs.filter((ref) => ref.type !== "output");
-  return [...permanent, ...previews].slice(0, MAX_OUTPUTS_PER_JOB);
+  // previews: false drops temp files, but only when the run saved something to keep.
+  const keep =
+    options.previews === false && permanent.length > 0 ? permanent : [...permanent, ...previews];
+  return keep.slice(0, MAX_OUTPUTS_PER_JOB);
 }

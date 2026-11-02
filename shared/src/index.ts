@@ -182,6 +182,12 @@ export const workflowManifestSchema = z.object({
   description: z.string().max(500).default(""),
   kind: workflowKindSchema,
   nsfw: z.boolean().default(false),
+  /**
+   * Keep the temporary preview files nodes such as PreviewImage produce. Set false for a workflow
+   * that saves its final image: only the saved files are returned (previews are still the
+   * fallback when the workflow saved nothing).
+   */
+  previews: z.boolean().default(true),
   /** File name of a preview image next to the manifest. */
   preview: z.string().optional(),
   params: z.array(manifestParamSchema),

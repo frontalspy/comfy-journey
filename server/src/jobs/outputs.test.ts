@@ -230,6 +230,28 @@ describe("collectOutputFiles", () => {
   });
 });
 
+describe("collectOutputFiles with previews: false", () => {
+  const entry = (outputs: ComfyHistoryEntry["outputs"]): ComfyHistoryEntry => ({
+    completed: true,
+    statusStr: "success",
+    outputs,
+  });
+  const saved = { filename: "final.png", subfolder: "", type: "output" };
+  const preview = { filename: "p.png", subfolder: "", type: "temp" };
+
+  it("keeps only saved files when the run saved something", () => {
+    const refs = collectOutputFiles(entry({ "1": { images: [preview, saved] } }), {
+      previews: false,
+    });
+    expect(refs).toEqual([saved]);
+  });
+
+  it("falls back to previews when nothing was saved", () => {
+    const refs = collectOutputFiles(entry({ "1": { images: [preview] } }), { previews: false });
+    expect(refs).toEqual([preview]);
+  });
+});
+
 describe("ComfyUI rejecting a workflow", () => {
   it("fails the job with a fixed message that carries none of ComfyUI's payload", async () => {
     h.comfy.rejectNextPrompt = {

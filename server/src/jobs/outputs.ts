@@ -62,7 +62,7 @@ export async function storeJobOutputs(
   entry: ComfyHistoryEntry,
 ): Promise<void> {
   if (entry.statusStr === "error") throw new JobFailure(MESSAGES.failed);
-  const refs = collectOutputFiles(entry);
+  const refs = collectOutputFiles(entry, { previews: loaded.manifest.previews });
   await clearJobOutputs(ctx, job.id);
   const imageIds: string[] = [];
   const keys: { media: string; thumb: string | null }[] = [];

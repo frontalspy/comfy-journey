@@ -20,8 +20,9 @@ Enable dev mode in ComfyUI's settings, then use **Save (API Format)**. The ordin
 a different format that the server cannot run.
 
 Keep exactly the outputs you want people to receive (a `SaveImage`, or a video save node). Preview
-nodes also produce files, and every file a run produces is returned. Delete previews, comparers and
-sound notifiers from the exported graph.
+nodes also produce temporary files, and by default those are returned too. Delete previews,
+comparers and sound notifiers from the exported graph, or add `"previews": false` to the manifest to
+return only the files the workflow saved (previews are still used if it saved nothing).
 
 ## Manifest
 
