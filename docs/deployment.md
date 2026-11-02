@@ -1,17 +1,5 @@
 # Deployment
 
-## Docker
-
-```
-cp .env.example .env      # set AUTH_TOKENS=me=<a long random secret>, and COMFYUI_URL if needed
-docker compose up -d
-```
-
-The image serves the API and the web app from one process on port 3000 and keeps its data in the
-`comfy-data` volume. By default it reaches a ComfyUI on the Docker host
-(`http://host.docker.internal:8188`). Mount a folder of workflows over `/app/workflows` to use your
-own.
-
 ## From source
 
 Requires Node 22 or newer.
