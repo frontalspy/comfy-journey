@@ -1,8 +1,15 @@
-import "dotenv/config";
 import path from "node:path";
+import dotenv from "dotenv";
 import { z } from "zod";
 import { AUTH_MODES } from "./auth/index.js";
 import { assertNotRealDataInTests, baseEnvSchema, findRealDataDir } from "./core/kit/index.js";
+
+// The repository root is where .env lives, whichever folder the server is started from.
+const REPO_ROOT = path.resolve(import.meta.dirname, "../..");
+dotenv.config({ path: path.join(REPO_ROOT, ".env"), quiet: true });
+
+/** A path from .env, relative to the repository root. */
+const repoPath = (value: string): string => path.resolve(REPO_ROOT, value);
 
 /** The workspace's `data/` folder, or `./data` beside wherever the server is started. */
 const DEFAULT_DATA_DIR = findRealDataDir() ?? path.resolve("data");
@@ -19,12 +26,12 @@ const envSchema = baseEnvSchema.extend({
   // Loopback by default: an install is private until the owner chooses otherwise.
   HOST: z.string().min(1).default("127.0.0.1"),
   // The server owns this directory (database, media, thumbnails, backups).
-  DATA_DIR: z.string().min(1).default(DEFAULT_DATA_DIR),
+  DATA_DIR: z.string().min(1).transform(repoPath).default(DEFAULT_DATA_DIR),
   // Server-side only, never sent to the browser.
   COMFYUI_URL: z.string().url().default("http://127.0.0.1:8188"),
   // Optional shared secret for the job_cleanup extension on ComfyUI; unset leaves cleanup off.
   COMFYUI_CLEANUP_TOKEN: z.string().optional(),
-  WORKFLOWS_DIR: z.string().min(1).default(DEFAULT_WORKFLOWS_DIR),
+  WORKFLOWS_DIR: z.string().min(1).transform(repoPath).default(DEFAULT_WORKFLOWS_DIR),
   // Workflows marked nsfw are hidden unless this is true.
   ALLOW_NSFW_WORKFLOWS: flag("true"),
   // A file whose default export builds a GpuGate, to share one GPU with other software.

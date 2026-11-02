@@ -1,0 +1,11 @@
+node_modules
+**/node_modules
+**/dist
+data
+.git
+.env
+.env.*
+*.local.md
+*.local
+workflows.local
+**/*.stackdump

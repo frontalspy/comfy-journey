@@ -16,6 +16,14 @@ results and streams progress back.
 
 See `workflows/krea2-turbo` for a complete example that uses only core ComfyUI nodes.
 
+## Documentation
+
+- [Configuration and authentication](docs/configuration.md)
+- [Workflows and manifests](docs/workflows.md)
+- [Deployment: Docker, reverse proxy, backups](docs/deployment.md)
+
+With Docker: `cp .env.example .env`, set `AUTH_TOKENS`, then `docker compose up -d`.
+
 ## Running the server
 
 Requires Node 22 or newer and a running ComfyUI.
