@@ -2,7 +2,13 @@
 
 ## From source
 
-Requires Node 22 or newer.
+Requires **Node 22 or newer**. `.nvmrc` pins it (`nvm use`). On an older Node the server exits at
+start with a message saying so.
+
+Under systemd, `ExecStart` must name that Node explicitly. A service does not read `.nvmrc`, and
+`/usr/bin/node` is often an older system Node. With nvm, use its full path, for example
+`~/.nvm/versions/node/v22.x.x/bin/node`. Run `npm ci` and `npm run build` with the same Node the
+service will use.
 
 ```
 npm install

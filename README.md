@@ -25,7 +25,8 @@ See `workflows/krea2-turbo` for a complete example that uses only core ComfyUI n
 
 ## Running the server
 
-Requires Node 22 or newer and a running ComfyUI.
+Requires **Node 22 or newer** (`.nvmrc` pins it; with nvm, run `nvm use`) and a running ComfyUI. The
+server refuses to start on an older Node, because following a job needs its built-in WebSocket.
 
 ```
 npm install
