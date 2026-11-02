@@ -1,0 +1,40 @@
+{
+  "EmptyLatentImage": {
+    "input": {}
+  },
+  "KSampler": {
+    "input": {}
+  },
+  "CLIPTextEncode": {
+    "input": {}
+  },
+  "VAEDecode": {
+    "input": {}
+  },
+  "UNETLoader": {
+    "input": {
+      "required": {
+        "unet_name": [["krea2_turbo_fp8_scaled.safetensors"], {}],
+        "weight_dtype": [["default"], {}]
+      }
+    }
+  },
+  "CLIPLoader": {
+    "input": {
+      "required": {
+        "clip_name": [["qwen3vl_4b_fp8_scaled.safetensors"], {}],
+        "type": [["krea2"], {}]
+      }
+    }
+  },
+  "VAELoader": {
+    "input": {
+      "required": {
+        "vae_name": [["qwen_image_vae.safetensors"], {}]
+      }
+    }
+  },
+  "PreviewImage": {
+    "input": {}
+  }
+}

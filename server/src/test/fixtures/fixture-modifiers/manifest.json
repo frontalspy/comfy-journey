@@ -1,0 +1,103 @@
+{
+  "id": "fixture-modifiers",
+  "name": "Fixture modifiers",
+  "description": "TEST FIXTURE ONLY: covers modifiers, images and optional branches.",
+  "kind": "txt2img",
+  "nsfw": false,
+  "params": [
+    {
+      "id": "prompt",
+      "label": "Prompt",
+      "type": "text",
+      "default": "a lighthouse at dusk",
+      "multiline": true,
+      "target": {
+        "nodeId": "6",
+        "input": "text"
+      }
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "type": "seed",
+      "default": -1,
+      "target": {
+        "nodeId": "3",
+        "input": "seed"
+      }
+    },
+    {
+      "id": "modifiers",
+      "label": "Modifiers",
+      "type": "modifiers",
+      "maxCount": 3,
+      "strength": {
+        "min": 0,
+        "max": 1.5,
+        "step": 0.05,
+        "default": 0.5
+      },
+      "choices": [
+        {
+          "value": "alpha",
+          "label": "Alpha",
+          "file": "alpha-lora.safetensors"
+        },
+        {
+          "value": "beta",
+          "label": "Beta",
+          "file": "beta-lora.safetensors"
+        },
+        {
+          "value": "gamma",
+          "label": "Gamma",
+          "file": "gamma-lora.safetensors"
+        }
+      ],
+      "chain": {
+        "model": {
+          "from": ["4", 0],
+          "consumers": [
+            {
+              "nodeId": "3",
+              "input": "model"
+            }
+          ]
+        },
+        "clip": {
+          "from": ["4", 1],
+          "consumers": [
+            {
+              "nodeId": "6",
+              "input": "clip"
+            },
+            {
+              "nodeId": "7",
+              "input": "clip"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "references",
+      "label": "References",
+      "type": "images",
+      "minCount": 0,
+      "maxCount": 3,
+      "encoder": "h3-media-state",
+      "uploadSubfolder": "comfy",
+      "target": {
+        "nodeId": "20",
+        "input": "media_state"
+      }
+    },
+    {
+      "id": "upscaled",
+      "label": "Upscaled preview",
+      "type": "boolean",
+      "default": false,
+      "removeWhenOff": ["30", "31"]
+    }
+  ]
+}

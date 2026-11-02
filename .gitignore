@@ -1,0 +1,14 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+data/
+coverage/
+.DS_Store
+*.log
+
+# Private notes and plans (mention the original deployment; never commit)
+*.local.md
+*.local/

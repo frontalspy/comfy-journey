@@ -1,0 +1,27 @@
+{
+  "name": "comfy",
+  "version": "0.0.0",
+  "private": true,
+  "description": "An independent, self-hosted front end for ComfyUI: describe a picture or a clip, get it back in a library.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "shared",
+    "server"
+  ],
+  "scripts": {
+    "build:shared": "npm run build --workspace=shared",
+    "build": "npm run build:shared && npm run build --workspace=server",
+    "dev": "npm run dev --workspace=server",
+    "typecheck": "npm run build:shared && npm run typecheck --workspace=shared --workspace=server",
+    "lint": "biome check --error-on-warnings .",
+    "format": "biome check --write .",
+    "test": "npm run build:shared && npm test --workspace=shared --workspace=server"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.14"
+  }
+}

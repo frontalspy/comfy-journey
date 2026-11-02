@@ -1,0 +1,57 @@
+{
+  "id": "krea2-turbo",
+  "name": "Krea 2 Turbo",
+  "description": "Fast, natural-looking images in 8 steps with Krea 2 Turbo. Uses only core ComfyUI nodes.",
+  "kind": "txt2img",
+  "nsfw": false,
+  "params": [
+    {
+      "id": "prompt",
+      "label": "Prompt",
+      "description": "Describe the picture in plain sentences.",
+      "type": "text",
+      "default": "",
+      "multiline": true,
+      "target": { "nodeId": "90", "input": "text" }
+    },
+    {
+      "id": "width",
+      "label": "Width",
+      "type": "int",
+      "default": 1024,
+      "min": 512,
+      "max": 1536,
+      "step": 64,
+      "group": "Size",
+      "target": { "nodeId": "88", "input": "width" }
+    },
+    {
+      "id": "height",
+      "label": "Height",
+      "type": "int",
+      "default": 1024,
+      "min": 512,
+      "max": 1536,
+      "step": 64,
+      "group": "Size",
+      "target": { "nodeId": "88", "input": "height" }
+    },
+    {
+      "id": "batch",
+      "label": "Images",
+      "type": "int",
+      "default": 1,
+      "min": 1,
+      "max": 8,
+      "target": { "nodeId": "88", "input": "batch_size" }
+    },
+    {
+      "id": "seed",
+      "label": "Seed",
+      "type": "seed",
+      "default": -1,
+      "advanced": true,
+      "target": { "nodeId": "89", "input": "seed" }
+    }
+  ]
+}
