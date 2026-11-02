@@ -10,16 +10,18 @@
   },
   "workspaces": [
     "shared",
-    "server"
+    "server",
+    "web"
   ],
   "scripts": {
     "build:shared": "npm run build --workspace=shared",
-    "build": "npm run build:shared && npm run build --workspace=server",
+    "build": "npm run build:shared && npm run build --workspace=server && npm run build --workspace=web",
     "dev": "npm run dev --workspace=server",
-    "typecheck": "npm run build:shared && npm run typecheck --workspace=shared --workspace=server",
+    "dev:web": "npm run dev --workspace=web",
+    "typecheck": "npm run build:shared && npm run typecheck --workspace=shared --workspace=server --workspace=web",
     "lint": "biome check --error-on-warnings .",
     "format": "biome check --write .",
-    "test": "npm run build:shared && npm test --workspace=shared --workspace=server"
+    "test": "npm run build:shared && npm test --workspace=shared --workspace=server --workspace=web"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.14"

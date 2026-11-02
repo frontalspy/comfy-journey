@@ -4,7 +4,7 @@ A self-hosted front end for [ComfyUI](https://github.com/comfyanonymous/ComfyUI)
 picture or a clip, get it back in a library. It is an independent project and is not affiliated
 with ComfyUI or Comfy Org.
 
-**Status: early development.** The server is working; the web app is being built.
+**Status: early development.** The server and the web app (Create, Library, Activity, Workflows, Settings) work end to end.
 
 ## How it works
 
@@ -26,6 +26,8 @@ cp .env.example .env     # then edit COMFYUI_URL if ComfyUI is not on this machi
 npm run build
 npm --workspace server start
 ```
+
+In production the server also serves the built web app. For development run `npm run dev` (server) and `npm run dev:web` (Vite on :5173, proxying `/api`).
 
 By default it listens on `127.0.0.1:3000` for one local user. To let other people in, pick an
 `AUTH_MODE` in `.env` (see `.env.example`); the server refuses to start with no authentication on

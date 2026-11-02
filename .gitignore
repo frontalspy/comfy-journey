@@ -12,3 +12,4 @@ coverage/
 # Private notes and plans (mention the original deployment; never commit)
 *.local.md
 *.local/
+*.stackdump
