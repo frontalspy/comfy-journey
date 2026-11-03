@@ -864,7 +864,8 @@ input[type="range"] {
 }
 
 .seg button {
-  min-height: 38px;
+  min-height: 44px;
+  min-width: 44px;
   padding: 0 14px;
   border: 0;
   border-radius: 999px;
