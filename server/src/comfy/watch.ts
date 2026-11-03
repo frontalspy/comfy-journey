@@ -8,7 +8,12 @@ export interface WatchOptions {
   createWebSocket: WebSocketFactory;
   /** Looked up once the socket opens, so a run that finished before we connected still ends. */
   history: () => Promise<ComfyHistoryEntry | null>;
-  /** Max silence between frames before the watch fails with "timeout". */
+  /**
+   * Whether ComfyUI still has this run queued or running. Asked when the socket goes quiet, since a
+   * single slow step (an upscale, a video decode) can send no frames for minutes.
+   */
+  isActive: () => Promise<boolean>;
+  /** Max silence between frames, with ComfyUI no longer holding the run, before the watch fails with "timeout". */
   idleTimeoutMs: number;
   signal?: AbortSignal;
 }
@@ -72,6 +77,15 @@ export async function* watchPrompt(options: WatchOptions): AsyncGenerator<ComfyE
   let wake: (() => void) | undefined;
   const notify = (): void => wake?.();
 
+  /** The history entry, once the run has ended, as the event that ends the watch. */
+  const finishedEvent = async (): Promise<ComfyEvent | undefined> => {
+    const entry = await options.history();
+    if (!entry?.completed) return undefined;
+    return entry.statusStr === "error"
+      ? { type: "error", message: "Run failed" }
+      : { type: "done" };
+  };
+
   const socket = options.createWebSocket(options.url);
   socket.addEventListener("message", (event) => {
     const frame = parseFrame(event.data);
@@ -88,18 +102,30 @@ export async function* watchPrompt(options: WatchOptions): AsyncGenerator<ComfyE
     notify();
   });
   socket.addEventListener("open", () => {
-    options
-      .history()
-      .then((entry) => {
-        if (!entry?.completed) return;
-        queue.push(
-          entry.statusStr === "error" ? { type: "error", message: "Run failed" } : { type: "done" },
-        );
+    finishedEvent()
+      .then((event) => {
+        if (!event) return;
+        queue.push(event);
         notify();
       })
       .catch(() => undefined);
   });
   options.signal?.addEventListener("abort", notify);
+
+  /** After a quiet spell: end the run if it already ended, keep waiting if ComfyUI still has it. */
+  const settleSilence = async (): Promise<void> => {
+    try {
+      const event = await finishedEvent();
+      if (event) {
+        queue.push(event);
+        return;
+      }
+      if (await options.isActive()) return;
+    } catch {
+      // ComfyUI did not answer: treat it like silence.
+    }
+    failure ??= new ComfyError("timeout", "ComfyUI went silent");
+  };
 
   try {
     while (true) {
@@ -116,8 +142,7 @@ export async function* watchPrompt(options: WatchOptions): AsyncGenerator<ComfyE
       await new Promise<void>((resolve) => {
         wake = resolve;
         timer = setTimeout(() => {
-          failure ??= new ComfyError("timeout", "ComfyUI went silent");
-          resolve();
+          void settleSilence().then(resolve);
         }, options.idleTimeoutMs);
       });
       clearTimeout(timer);

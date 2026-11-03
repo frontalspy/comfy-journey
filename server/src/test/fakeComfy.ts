@@ -22,6 +22,8 @@ export interface FakeComfy {
   /** Outputs served by /view, keyed by filename. */
   files: Map<string, { mime: string; bytes: Buffer }>;
   history: Map<string, unknown>;
+  /** Prompt ids that GET /queue lists as running. */
+  queueRunning: string[];
   objectInfo: Record<string, unknown>;
   /** Frames to push once the prompt is submitted AND a websocket is connected. */
   runScript: (promptId: string) => FakeFrame[];
@@ -76,6 +78,7 @@ export async function createFakeComfy(port = 0): Promise<FakeComfy> {
     rejectNextPrompt: undefined,
     files: new Map(),
     history: new Map(),
+    queueRunning: [],
     objectInfo: {},
     runScript: (promptId) => [executingFrame(promptId, "3"), executingFrame(promptId, null)],
     disconnectAfterScript: false,
@@ -129,6 +132,11 @@ export async function createFakeComfy(port = 0): Promise<FakeComfy> {
       flush();
     } else if (url.pathname === "/system_stats") {
       reply(200, { system: { os: "fake" }, devices: [{ name: "Fake GPU" }] });
+    } else if (url.pathname === "/queue") {
+      reply(200, {
+        queue_running: fake.queueRunning.map((id, index) => [index, id, {}, {}, []]),
+        queue_pending: [],
+      });
     } else if (url.pathname === "/object_info") {
       reply(200, fake.objectInfo);
     } else if (url.pathname.startsWith("/history/")) {

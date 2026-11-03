@@ -89,6 +89,25 @@ describe("collecting real ComfyUI output shapes", () => {
     });
   });
 
+  it("records the picture size of a clip from its MP4 header", async () => {
+    const tkhdBody = Buffer.alloc(84);
+    tkhdBody.writeUInt32BE(832 * 65536, 76);
+    tkhdBody.writeUInt32BE(480 * 65536, 80);
+    const wrap = (type: string, body: Buffer): Buffer => {
+      const header = Buffer.alloc(8);
+      header.writeUInt32BE(body.length + 8, 0);
+      header.write(type, 4, "latin1");
+      return Buffer.concat([header, body]);
+    };
+    const clip = wrap("moov", wrap("trak", wrap("tkhd", tkhdBody)));
+    await scriptOutputs(
+      { "20": { gifs: [{ filename: "clip.mp4", subfolder: "", type: "output" }] } },
+      { "clip.mp4": { mime: "video/mp4", bytes: clip } },
+    );
+    const [video] = await resultsOf(await runJob());
+    expect(video).toMatchObject({ kind: "video", width: 832, height: 480 });
+  });
+
   it("stores a mix of images and one final video, thumbnails for images only", async () => {
     await scriptOutputs(
       {

@@ -109,6 +109,21 @@ describe("submit and watch", () => {
     await expect(collect(client.watch(promptId))).rejects.toMatchObject({ kind: "timeout" });
   });
 
+  it("keeps waiting through a long silent step while ComfyUI still has the run", async () => {
+    const { fake, client } = await setup({ idleTimeoutMs: 50 });
+    fake.runScript = () => [];
+    const { promptId } = await client.submit(workflow);
+    fake.queueRunning = [promptId];
+    setTimeout(() => {
+      fake.queueRunning = [];
+      fake.history.set(promptId, {
+        status: { completed: true, status_str: "success" },
+        outputs: {},
+      });
+    }, 300);
+    expect(await collect(client.watch(promptId))).toEqual([{ type: "done" }]);
+  });
+
   it("stops quietly when aborted", async () => {
     const { fake, client } = await setup();
     fake.runScript = () => [];

@@ -179,6 +179,18 @@ export function createComfyClient(options: ComfyClientOptions): ComfyClient {
     };
   };
 
+  /** Whether ComfyUI still lists the run in its running or pending queue. */
+  const isQueued = async (promptId: string): Promise<boolean> => {
+    const body = await json("/queue", undefined, probeTimeoutMs);
+    if (!isRecord(body)) return false;
+    const lists = [body.queue_running, body.queue_pending];
+    // Each entry is [number, prompt_id, ...].
+    return lists.some(
+      (list) =>
+        Array.isArray(list) && list.some((item) => Array.isArray(item) && item[1] === promptId),
+    );
+  };
+
   return {
     async submit(workflow) {
       const body = await json("/prompt", {
@@ -199,6 +211,7 @@ export function createComfyClient(options: ComfyClientOptions): ComfyClient {
         promptId,
         createWebSocket,
         history: () => history(promptId),
+        isActive: () => isQueued(promptId),
         idleTimeoutMs,
         signal,
       });

@@ -7,6 +7,7 @@ import { images } from "../db/schema.js";
 import { insertImage } from "../images/imageRepo.js";
 import { describeFilename } from "../storage/mime.js";
 import { describeImage } from "../storage/thumbnails.js";
+import { readMp4Size } from "../storage/videoSize.js";
 import type { LoadedWorkflow } from "../workflows/loader.js";
 import { cleanupComfyFiles } from "./comfyCleanup.js";
 import type { JobContext } from "./jobContext.js";
@@ -75,7 +76,7 @@ export async function storeJobOutputs(
       const facts =
         described.kind === "image"
           ? await describeImage(output.bytes)
-          : { width: null, height: null, thumbnail: null };
+          : { ...(readMp4Size(output.bytes) ?? { width: null, height: null }), thumbnail: null };
       // Objects first, rows after; the entry is tracked as soon as its media exists so a failing
       // thumbnail put still cleans the media up.
       const written: { media: string; thumb: string | null } = {
