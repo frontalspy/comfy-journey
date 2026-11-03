@@ -15,7 +15,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:backup": "tsx src/db/runBackupOnce.ts",
-    "start:fake": "tsx src/test/fakeComfyMain.ts"
+    "start:fake": "tsx src/test/fakeComfyMain.ts",
+    "bench": "tsx src/test/benchLibrary.ts"
   },
   "dependencies": {
     "@comfy/shared": "*",
