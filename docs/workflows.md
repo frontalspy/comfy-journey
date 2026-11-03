@@ -69,5 +69,10 @@ or model files.
 
 Workflows whose output is a video work like image workflows: use `kind` `t2v` or `i2v` and end the
 graph in a video save node. Clips appear in the feed and library with a duration badge, play
-silently on hover, and open in a player. Keep clips short: results are stored on disk and served
-with range requests.
+silently on hover, and open in a player. Keep clips short: results are stored whole, and a disk store serves them with range requests so
+players can seek.
+
+What is kept: files that ComfyUI lists under any output key (`images`, `gifs` from the VHS video
+nodes, `videos`) and whose name ends in `.mp4`, `.webm`, `.mkv` or `.mov`, plus `.png`, `.jpg`,
+`.webp` and `.gif` for pictures. Anything else (audio, text) is ignored. Clips do not get a
+generated poster image yet.

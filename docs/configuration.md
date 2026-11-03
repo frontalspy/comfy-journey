@@ -44,7 +44,7 @@ Choose one with `AUTH_MODE`. Every mode fails closed: a request with no identity
 | `none`         | One person on one machine. The server refuses to start on a non-loopback `HOST` unless `AUTH_NONE_ALLOW_NETWORK=true`. | —                                                                                                                   |
 | `token`        | A few people, no reverse proxy. People sign in once with their token (an HttpOnly cookie is set).                      | `AUTH_TOKENS=alice=<16+ chars>,bob=<16+ chars>`                                                                     |
 | `proxy-header` | A reverse proxy you control authenticates people and sets a header.                                                    | `AUTH_HEADER` (default `x-forwarded-user`), `TRUSTED_PROXIES` (peer addresses allowed to set it; default loopback)  |
-| `module`       | Anything else, e.g. a single sign-on provider.                                                                         | `AUTH_MODULE=/path/to/provider.js`, whose default export builds an `AuthProvider` (see `server/src/auth/types.ts`). |
+| `module`       | Anything else, e.g. a single sign-on provider.                                                                         | `AUTH_MODULE=/path/to/provider.js`, whose default export builds an `AuthProvider` (see [plugins.md](plugins.md)). |
 
 Behind `proxy-header`, make sure the proxy strips the header from incoming requests and that the
 app is only reachable through the proxy.

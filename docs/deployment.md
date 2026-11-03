@@ -42,4 +42,5 @@ Terminate TLS at the proxy and forward to the app. Two things matter:
 
 Optional: install `comfyui-extension/job_cleanup` into ComfyUI's `custom_nodes` and set
 `COMFYUI_CLEANUP_TOKEN` in both places. Finished jobs' files are then removed from ComfyUI once the
-app has stored its own copy.
+app has stored its own copy. Install steps, what the extension will and will not delete, and a
+safety-net script for old files are in `comfyui-extension/job_cleanup/README.md`.
