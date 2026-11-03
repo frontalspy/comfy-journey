@@ -1,0 +1,30 @@
+name: Release
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Browser tests (fake ComfyUI)
+        run: npm run test:e2e
+      - name: Package
+        run: scripts/package-release.sh "${GITHUB_REF_NAME#v}" release
+      - name: Publish the release
+        run: gh release create "$GITHUB_REF_NAME" "release/comfy-${GITHUB_REF_NAME#v}.tar.gz" --title "$GITHUB_REF_NAME" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

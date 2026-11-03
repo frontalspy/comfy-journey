@@ -22,6 +22,20 @@ npm --workspace server start
 
 Windows, macOS and Linux all work. Set `NODE_ENV=production` so the server hosts the built web app.
 
+## From a release
+
+Each version tag publishes `comfy-<version>.tar.gz`, which has the app already built. Extract it,
+then:
+
+```
+npm ci --omit=dev
+cp .env.example .env    # edit it
+NODE_ENV=production node server/dist/index.js
+```
+
+The same Node 22 rule applies. Maintainers: `scripts/package-release.sh <version>` builds the
+same archive locally after `npm run build`.
+
 ## Behind a reverse proxy
 
 Terminate TLS at the proxy and forward to the app. Two things matter:
