@@ -2,6 +2,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { UnauthorizedError } from "../core/kit/index.js";
+import { OwnerRateLimiter } from "../jobs/rateLimiter.js";
 import {
   createNoAuthProvider,
   createProxyHeaderProvider,
@@ -30,6 +31,8 @@ export interface AuthSettings {
   /** `module` mode: a file whose default export is an `AuthProviderFactory`. */
   module?: string;
 }
+
+const LOGIN_ATTEMPTS = { hits: 10, windowMs: 60_000 } as const;
 
 const LOOPBACK = new Set(["127.0.0.1", "::1", "localhost"]);
 
@@ -96,10 +99,16 @@ export function createAuthGate(
   provider: AuthProvider,
   options: { secureCookie: boolean },
 ): (req: Request, res: Response, next: NextFunction) => void {
+  // Sign-in attempts per peer address. Tokens are long, so this only slows guessing down.
+  const loginAttempts = new OwnerRateLimiter(LOGIN_ATTEMPTS.hits, LOGIN_ATTEMPTS.windowMs);
   return (req, res, next) => {
     res.setHeader("Cache-Control", "no-store");
     const { session } = provider;
     if (session && req.method === "POST" && req.path === "/auth/login") {
+      if (!loginAttempts.tryHit(req.socket.remoteAddress ?? "unknown")) {
+        res.status(429).json({ error: "Too many sign-in attempts. Try again in a minute." });
+        return;
+      }
       // The one body this gate reads itself: small, JSON only, and before any identity exists.
       express.json({ limit: "2kb" })(req, res, (err?: unknown) => {
         if (err) return deny(next);

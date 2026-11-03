@@ -3,6 +3,7 @@ import path from "node:path";
 import type { Express } from "express";
 import { type AuthProvider, createAuthGate } from "./auth/index.js";
 import { createHttpApp } from "./core/kit/index.js";
+import { securityHeaders } from "./core/securityHeaders.js";
 import { mountSpaHosting } from "./core/spa.js";
 import { env } from "./env.js";
 import { apiRoutes } from "./routes/index.js";
@@ -23,6 +24,7 @@ export function createApp(services: AppServices, auth: AppAuth): Express {
     // Any path under /api, mounted or not, answers 401 without an identity, and does so before
     // the body is parsed.
     gate: (app) => {
+      app.use(securityHeaders);
       app.use("/api", createAuthGate(auth.provider, { secureCookie: auth.secureCookie }));
     },
     mount: (app) => {

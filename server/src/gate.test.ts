@@ -53,6 +53,28 @@ describe("the auth gate (token mode)", () => {
     }
   });
 
+  it("throttles sign-in attempts and keeps working for a valid token before the limit", async () => {
+    const test = await createTestApp();
+    cleanup = test.cleanup;
+    const ok = await request(test.app).post("/api/auth/login").send({ token: TEST_SECRET });
+    expect(ok.status).toBe(204);
+    for (let attempt = 0; attempt < 9; attempt += 1) {
+      const wrong = await request(test.app).post("/api/auth/login").send({ token: "wrong" });
+      expect(wrong.status).toBe(401);
+    }
+    const blocked = await request(test.app).post("/api/auth/login").send({ token: TEST_SECRET });
+    expect(blocked.status).toBe(429);
+  });
+
+  it("sends anti-framing and no-sniff headers on every response", async () => {
+    const test = await createTestApp();
+    cleanup = test.cleanup;
+    const res = await request(test.app).get("/api/health");
+    expect(res.headers["x-frame-options"]).toBe("DENY");
+    expect(res.headers["x-content-type-options"]).toBe("nosniff");
+    expect(res.headers["content-security-policy"]).toContain("frame-ancestors 'none'");
+  });
+
   it("is a 401 before the body is parsed, even for a malformed body", async () => {
     const test = await createTestApp();
     cleanup = test.cleanup;
