@@ -47,6 +47,8 @@ a network address.
 npm test        # builds the shared contracts, then runs every test
 npm run lint
 npm run typecheck
+npm run build && npm run test:e2e   # browser tests in Chrome, against a fake ComfyUI
+npm run fake-comfy   # the fake ComfyUI on its own (port 8199), for demos with no GPU
 ```
 
 ## Licence

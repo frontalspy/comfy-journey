@@ -599,14 +599,18 @@ button.chip[aria-checked="true"] {
 }
 
 @media (hover: none) {
-  .tile-actions {
+  /* Always visible on touch, but only the buttons take taps: the rest of the bar still opens the picture. */
+  .tile-actions,
+  .tile:hover .tile-actions,
+  .tile:focus-within .tile-actions {
     opacity: 1;
-    pointer-events: auto;
+    pointer-events: none;
   }
 
   .tile-actions .icon-btn {
     width: 44px;
     height: 44px;
+    pointer-events: auto;
   }
 
   .tile-actions .secondary {

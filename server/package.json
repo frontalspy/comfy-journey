@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
-    "db:backup": "tsx src/db/runBackupOnce.ts"
+    "db:backup": "tsx src/db/runBackupOnce.ts",
+    "start:fake": "tsx src/test/fakeComfyMain.ts"
   },
   "dependencies": {
     "@comfy/shared": "*",

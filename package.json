@@ -21,9 +21,12 @@
     "typecheck": "npm run build:shared && npm run typecheck --workspace=shared --workspace=server --workspace=web",
     "lint": "biome check --error-on-warnings .",
     "format": "biome check --write .",
-    "test": "npm run build:shared && npm test --workspace=shared --workspace=server --workspace=web"
+    "test": "npm run build:shared && npm test --workspace=shared --workspace=server --workspace=web",
+    "fake-comfy": "npm run start:fake --workspace=server",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.14"
+    "@biomejs/biome": "^2.3.14",
+    "@playwright/test": "^1.64.1"
   }
 }

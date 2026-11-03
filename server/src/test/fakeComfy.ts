@@ -60,7 +60,7 @@ async function readBody(req: http.IncomingMessage): Promise<Buffer> {
 }
 
 /** A real http + websocket server on an ephemeral loopback port that behaves like ComfyUI. */
-export async function createFakeComfy(): Promise<FakeComfy> {
+export async function createFakeComfy(port = 0): Promise<FakeComfy> {
   const sockets = new Set<WebSocket>();
   let counter = 0;
   let pending: string | undefined;
@@ -179,7 +179,7 @@ export async function createFakeComfy(): Promise<FakeComfy> {
     flush();
   });
 
-  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  await new Promise<void>((resolve) => server.listen(port, "127.0.0.1", resolve));
   fake.url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   fake.close = async () => {
     for (const socket of sockets) socket.terminate();

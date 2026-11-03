@@ -7,7 +7,7 @@ npm install
 npm run lint && npm run typecheck && npm test
 ```
 
-All three must pass. `npm run format` fixes formatting. For the UI run `npm run dev` (server) and
+All three must pass. For UI changes also run `npm run build && npm run test:e2e` (needs Chrome; it starts a fake ComfyUI, so no GPU is required). `npm run format` fixes formatting. For the UI run `npm run dev` (server) and
 `npm run dev:web` (Vite) together.
 
 - Follow the patterns in the code you touch. Features live in `web/src/features/<name>`; the server
