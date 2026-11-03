@@ -49,6 +49,7 @@ export function LightboxPanel({ image, position, actions }: LightboxPanelProps) 
             type="button"
             className="btn btn-small"
             onClick={() => actions.reusePrompt(image)}
+            disabled={!prompt}
           >
             <Icon name="text" size={16} /> Use prompt
           </button>
